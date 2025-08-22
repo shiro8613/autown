@@ -35,7 +35,8 @@ func (app App) Run(ctx context.Context) error {
 			if event.Has(fsnotify.Write | fsnotify.Remove | fsnotify.Create) {
 				log.Printf("%s Change Detected.\n", event.Name)
 				if err := os.Chown(event.Name, app.uid, app.gid); err != nil {
-					return err
+					log.Println(err)
+					continue
 				}
 				log.Printf("Executed %s Chown.\n", event.Name)
 			}
