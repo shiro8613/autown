@@ -4,13 +4,13 @@ on:
   push:
     tags:
       - 'v*.*.*'
+permissions:
+    contents: write
 
 jobs:
   build:
     name: Build for ${{ matrix.os }} and ${{ matrix.arch }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     strategy:
       matrix:
         include:
