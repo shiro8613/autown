@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 
 	"github.com/fsnotify/fsnotify"
@@ -23,7 +24,23 @@ func (app App) Run(ctx context.Context) error {
 	}
 	defer watcher.Close()
 
-	watcher.Add(app.dir)
+	err = filepath.Walk(app.dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			err = watcher.Add(path)
+			if err != nil {
+				return err
+			}
+			log.Printf("Watching directory: %s", path)
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 
 	for {
 		select{
@@ -33,6 +50,15 @@ func (app App) Run(ctx context.Context) error {
 
 		case event := <- watcher.Events:
 			if event.Has(fsnotify.Write | fsnotify.Create) {
+				info, err := os.Stat(event.Name)
+				if err == nil && info.IsDir() {
+					log.Printf("New directory created: %s. Adding to watcher.", event.Name)
+					err := watcher.Add(event.Name)
+					if err != nil {
+						log.Printf("Failed to add new directory: %v", err)
+					}
+				}
+
 				log.Printf("%s Change Detected.\n", event.Name)
 				if err := os.Chown(event.Name, app.uid, app.gid); err != nil {
 					log.Println(err)
