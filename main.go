@@ -32,7 +32,7 @@ func (app App) Run(ctx context.Context) error {
 			return nil
 
 		case event := <- watcher.Events:
-			if event.Has(fsnotify.Write | fsnotify.Remove | fsnotify.Create) {
+			if event.Has(fsnotify.Write | fsnotify.Create) {
 				log.Printf("%s Change Detected.\n", event.Name)
 				if err := os.Chown(event.Name, app.uid, app.gid); err != nil {
 					log.Println(err)
